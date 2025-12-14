@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickLens | Traffic Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mongo: '#00ED64',
+                        dark: '#001E2B',
+                        card: '#00684A'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-gray-200 font-sans min-h-screen p-6">
+
+    <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <header class="mb-10 text-center">
+            <h1 class="text-5xl font-bold text-mongo mb-2 tracking-tighter">ClickLens</h1>
+            <p class="text-gray-400 text-lg">High-Performance URL Redirection & Analytics Engine</p>
+        </header>
+
+        <!-- Tool 1: The Shortener -->
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 mb-8">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <span class="bg-mongo text-dark text-xs font-bold px-2 py-1 rounded mr-3">TOOL</span>
+                Link Generator
+            </h2>
+            <div class="flex gap-4">
+                <input type="text" id="longUrl" placeholder="Paste your long URL here (e.g. https://mongodb.com)" 
+                    class="flex-1 p-4 rounded bg-gray-900 border border-gray-600 focus:border-mongo focus:outline-none text-white transition">
+                <button onclick="shortenUrl()" 
+                    class="bg-mongo text-dark font-bold px-8 py-4 rounded hover:bg-white transition">
+                    Shorten
+                </button>
+            </div>
+            
+            <p class="text-sm text-gray-500 mt-3">
+                Need a link? Try: 
+                <button onclick="document.getElementById('longUrl').value = 'https://www.mongodb.com/careers'" 
+                    class="text-mongo hover:underline font-mono">
+                    https://www.mongodb.com/careers
+                </button>
+            </p>
+
+            <!-- Result Area -->
+            <div id="resultArea" class="hidden mt-6 bg-gray-900 p-4 rounded border border-gray-700 flex justify-between items-center animate-pulse">
+                <div>
+                    <p class="text-gray-400 text-sm">Short Link Generated:</p>
+                    <a id="shortLink" href="#" target="_blank" class="text-mongo text-xl font-mono hover:underline"></a>
+                </div>
+                <button onclick="copyToClipboard()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded">Copy</button>
+            </div>
+        </div>
+
+        <!-- Tool 2: The Analytics Dashboard -->
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded mr-3">DATA</span>
+                Traffic Analytics
+            </h2>
+            <div class="flex gap-4 mb-6">
+                <input type="text" id="shortIdInput" placeholder="Enter Short ID (e.g. Hk9s_2d)" 
+                    class="flex-1 p-3 rounded bg-gray-900 border border-gray-600 focus:border-blue-500 focus:outline-none text-white">
+                <button onclick="fetchAnalytics()" 
+                    class="bg-blue-600 text-white font-bold px-6 py-3 rounded hover:bg-blue-500 transition">
+                    View Report
+                </button>
+            </div>
+
+            <!-- Stats Display -->
+            <div id="statsArea" class="hidden">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-900 p-4 rounded border border-gray-700 text-center">
+                        <p class="text-gray-400 text-sm">Total Clicks</p>
+                        <p id="totalClicks" class="text-4xl font-bold text-white">0</p>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded border border-gray-700 text-center">
+                        <p class="text-gray-400 text-sm">Status</p>
+                        <p class="text-xl font-bold text-mongo">Active</p>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-gray-300 mb-2">Browser Breakdown (Aggregation Result)</h3>
+                <div id="browserStats" class="space-y-2">
+                    <!-- Bars will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use relative path so it works on localhost, 192.168.x.x, or production automatically
+        const API_BASE = ''; 
+
+        async function shortenUrl() {
+            const longUrl = document.getElementById('longUrl').value;
+            if (!longUrl) return alert("Please enter a URL");
+
+            try {
+                const res = await fetch(`${API_BASE}/api/shorten`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: longUrl })
+                });
+                const data = await res.json();
+                
+                // ERROR HANDLING FIX: Check if server returned an error
+                if (data.error) {
+                    alert("Server Error: " + data.error);
+                    return;
+                }
+                
+                const resultArea = document.getElementById('resultArea');
+                const shortLink = document.getElementById('shortLink');
+                
+                resultArea.classList.remove('hidden');
+                resultArea.classList.remove('animate-pulse');
+                
+                if (data.shortUrl) {
+                    shortLink.href = data.shortUrl;
+                    shortLink.innerText = data.shortUrl;
+                } else {
+                    shortLink.innerText = "Error: No shortUrl returned";
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert("Error creating link. Is the server running?");
+            }
+        }
+
+        async function fetchAnalytics() {
+            const id = document.getElementById('shortIdInput').value;
+            if (!id) return alert("Enter an ID");
+
+            try {
+                // Fetch from our MongoDB Aggregation Endpoint
+                const res = await fetch(`${API_BASE}/api/analytics/${id}`);
+                const data = await res.json();
+                
+                document.getElementById('statsArea').classList.remove('hidden');
+                document.getElementById('totalClicks').innerText = data.totalClicks;
+                
+                const browserContainer = document.getElementById('browserStats');
+                browserContainer.innerHTML = '';
+
+                data.browserBreakdown.forEach(item => {
+                    // Simple logic to calculate width of bar
+                    const percent = (item.count / data.totalClicks) * 100;
+                    
+                    const bar = `
+                        <div class="flex items-center text-sm">
+                            <div class="w-24 text-gray-400 truncate">${item._id || 'Unknown'}</div>
+                            <div class="flex-1 h-4 bg-gray-700 rounded overflow-hidden mx-2">
+                                <div class="h-full bg-blue-500" style="width: ${percent}%"></div>
+                            </div>
+                            <div class="w-8 text-right font-bold">${item.count}</div>
+                        </div>
+                    `;
+                    browserContainer.innerHTML += bar;
+                });
+
+            } catch (err) {
+                alert("Could not fetch stats. Check the ID.");
+            }
+        }
+
+        function copyToClipboard() {
+            const link = document.getElementById('shortLink').innerText;
+            navigator.clipboard.writeText(link);
+            alert("Copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
