@@ -97,4 +97,3 @@ Stores the raw click-stream data for analytics.
 
 ---
 
-Built for the MongoDB Software Engineering Internship Application (Data Engineering Dept).
