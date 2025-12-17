@@ -1,86 +1,90 @@
-ClickLens - Analytics & Traffic Engine
+# 🚀 ClickLens - Analytics & Traffic Engine
 
 Live Demo: https://click-lens.vercel.app/
 
-🚀 Project Overview
+## 🎯 Project Overview
 
 ClickLens is a high-performance URL redirection service that acts as a Data Platform. Unlike standard URL shorteners, ClickLens focuses on the "Infrastructure" aspect of data collection, capturing granular user metadata (IP, User-Agent, Device Type) asynchronously for every request.
 
 The system relies on Data Engineering principles, separating high-velocity write operations (logging) from read-heavy operations (analytics) to ensure scalability.
 
-🛠 Tech Stack
+## 🛠 Tech Stack
 
-Backend: Node.js, Express.js
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB Atlas (Mongoose ODM)
+- **Frontend**: HTML5, Tailwind CSS (Dark Mode UI)
+- **Deployment**: Vercel (Serverless Functions)
+- **Key Libraries**: shortid, express-useragent, mongoose
 
-Database: MongoDB Atlas (Mongoose ODM)
+## 🏗 System Architecture
 
-Frontend: HTML5, Tailwind CSS (Dark Mode UI)
+### Link Generation Service
+Generates unique, collision-resistant short tokens optimized for O(1) read access.
 
-Deployment: Vercel (Serverless Functions)
+### Redirection Engine
+Detects incoming traffic and redirects immediately while asynchronously writing metadata to the logs collection (Non-blocking I/O).
 
-Key Libraries: shortid, express-useragent, mongoose
+### Analytics Pipeline
+Uses MongoDB Aggregation Framework ($match, $group, $sum) to process raw logs into actionable insights (e.g., Browser Distribution) in real-time.
 
-🏗 System Architecture
+## ✅ Current Status
 
-Link Generation Service: Generates unique, collision-resistant short tokens optimized for O(1) read access.
+- [x] Dynamic URL Shortening: Automatically detects host (Localhost vs Vercel)
+- [x] Smart Redirection: Captures OS, Device, and Browser data instantly
+- [x] Real-Time Analytics: Visual dashboard showing total clicks and browser breakdown
+- [x] Full-Stack UI: Dark-mode interface built with Tailwind CSS
+- [x] Secure Deployment: Environment variables managed via Vercel Secrets
 
-Redirection Engine: Detects incoming traffic and redirects immediately while asynchronously writing metadata to the logs collection (Non-blocking I/O).
+## 🚀 How to Run Locally
 
-Analytics Pipeline: Uses MongoDB Aggregation Framework ($match, $group, $sum) to process raw logs into actionable insights (e.g., Browser Distribution) in real-time.
+### Clone the repository
 
-🔄 Current Status
-
-[x] Dynamic URL Shortening: Automatically detects host (Localhost vs Vercel).
-
-[x] Smart Redirection: Captures OS, Device, and Browser data instantly.
-
-[x] Real-Time Analytics: Visual dashboard showing total clicks and browser breakdown.
-
-[x] Full-Stack UI: Dark-mode interface built with Tailwind CSS.
-
-[x] Secure Deployment: Environment variables managed via Vercel Secrets.
-
-🚀 How to Run Locally
-
-Clone the repository
-
-git clone [https://github.com/harshkarakotiofficial/ClickLens.git](https://github.com/harshkarakotiofficial/ClickLens.git)
+```bash
+git clone https://github.com/harshkarakotiofficial/ClickLens.git
 cd ClickLens
+```
 
+### Install Dependencies
 
-Install Dependencies
-
+```bash
 npm install
+```
 
+### Configure Environment
 
-Configure Environment
-Create a .env file in the root directory:
+Create a `.env` file in the root directory:
 
+```
 MONGO_URI=your_mongodb_connection_string
 PORT=3001
+```
 
+### Start the Server
 
-Start the Server
-
+```bash
 node index.js
+```
 
+The dashboard will be available at `http://localhost:3001`
 
-The dashboard will be available at http://localhost:3001
+## 📂 Database Schema
 
-📂 Database Schema
+### 1. Url Schema (Read-Heavy)
 
-1. Url Schema (Read-Heavy)
 Optimized for fast lookups during redirection.
 
+```json
 {
   "shortId": "String (Indexed, Unique)",
   "redirectUrl": "String"
 }
+```
 
+### 2. Log Schema (Write-Heavy)
 
-2. Log Schema (Write-Heavy)
 Stores the raw click-stream data for analytics.
 
+```json
 {
   "shortId": "String",
   "timestamp": "Date",
@@ -89,6 +93,8 @@ Stores the raw click-stream data for analytics.
   "device": "String",
   "ipAddress": "String"
 }
+```
 
+---
 
 Built for the MongoDB Software Engineering Internship Application (Data Engineering Dept).
